@@ -78,6 +78,10 @@ pub struct Picture<'a> {
     #[style_key]
     #[prop]
     extent: PictureSize,
+    /// Whether a rendered picture shows the transparency grid behind its transparent pixels (default on). Off for
+    /// a picture that is a mask on the surface it sits on, such as an equation.
+    #[prop]
+    checker: bool,
 }
 
 impl<'a> Picture<'a> {
@@ -103,7 +107,15 @@ impl<'a> Picture<'a> {
     }
 
     fn from_source(label: impl Into<Label>, source: Source<'a>) -> Self {
-        Picture { common: Common::new(), revision: Revision::default(), source, aspect: ThumbAspect::SQUARE, extent: PictureSize::Icon }.label(label)
+        Picture {
+            common: Common::new(),
+            revision: Revision::default(),
+            source,
+            aspect: ThumbAspect::SQUARE,
+            extent: PictureSize::Icon,
+            checker: true,
+        }
+        .label(label)
     }
 }
 
@@ -172,7 +184,7 @@ impl Component for Picture<'_> {
                 let rect = cx.content_rect;
                 let request = ThumbRequest::for_cell(rect.width().max(rect.height()), cx.ctx.pixels_per_point());
                 let state = thumbnails.state(&cx.ctx, *source, key, &request, Priority::VISIBLE);
-                thumbnails.paint(&ui.content_painter(cx), rect, &state, &ThumbPaint::default());
+                thumbnails.paint(&ui.content_painter(cx), rect, &state, &ThumbPaint::default().checker(self.checker));
             }
         }
     }
